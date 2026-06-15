@@ -1,0 +1,14 @@
+.home-carousel-wrapper {
+    height: auto;
+    display: flex;
+    justify-content: center;
+}
+
+.home-carousel-wrapper .slick-dots li button {
+    background: #000000;
+}
+   
+.slick-dots li.slick-active {
+    opacity: 1;
+    border: 1px solid rgba(0, 0, 0, .8);
+}

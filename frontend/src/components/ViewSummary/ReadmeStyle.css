@@ -1,0 +1,120 @@
+.markdown-container {
+    padding: 2vh 4vh;
+    line-height: 1.6;
+    color: #ffffff;
+    background: #0d1117;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .markdown-container {
+        padding: 1vh 2vh;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 576px) {
+    .markdown-container {
+        padding: 1vh 1.5vh;
+        font-size: 13px;
+    }
+}
+
+.markdown-container .contains-task-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.markdown-container .task-list-item {
+    display: flex;
+    align-items: center;
+}
+
+.markdown-container .task-list-item input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.markdown-container table {
+    border-collapse: collapse;
+    width: 100%;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .markdown-container table {
+        font-size: 12px;
+    }
+}
+
+.markdown-container th,
+.markdown-container td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+@media (max-width: 576px) {
+    .markdown-container th,
+    .markdown-container td {
+        padding: 6px;
+    }
+}
+
+.markdown-container th {
+    background-color: #000000;
+}
+
+.markdown-container pre {
+    margin: 8px 0;
+    border-radius: 6px;
+    padding: 16px;
+    overflow: auto;
+    background: #161c25;
+    border: 1px solid #e1e4e8;
+}
+
+@media (max-width: 768px) {
+    .markdown-container pre {
+        padding: 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .markdown-container pre {
+        padding: 8px;
+        font-size: 11px;
+    }
+}
+
+.markdown-container code {
+    background: rgba(175, 184, 193, 0.2);
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    font-size: 85%;
+    word-break: break-word;
+}
+
+.markdown-container pre code {
+    background: none;
+    padding: 0;
+}
+
+.markdown-container ul {
+    padding-left: 3vh;
+}
+
+@media (max-width: 768px) {
+    .markdown-container ul {
+        padding-left: 2vh;
+    }
+}
+
+@media (max-width: 576px) {
+    .markdown-container ul {
+        padding-left: 1.5vh;
+    }
+}

@@ -1,0 +1,20 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.ant-dropdown-menu-item-extra {
+    margin: 0 !important;
+}
+
+.full-height-tabs .ant-tabs-content,
+.full-height-tabs .ant-tabs-content-holder,
+.full-height-tabs .ant-tabs-tabpane {
+    height: 100%;
+}
+
+.ant-menu-item-selected span,
+.ant-menu-submenu-selected > .ant-menu-submenu-title {
+    font-weight: 700 !important;
+}
