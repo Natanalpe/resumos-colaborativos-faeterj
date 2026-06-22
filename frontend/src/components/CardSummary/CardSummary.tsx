@@ -27,13 +27,15 @@ const { useBreakpoint } = Grid;
 type CardSummaryProps = {
     summaryData: any;
     onlyDeletedContent?: number;
-    homePage?: boolean
+    homePage?: boolean;
+    onOpen?: (id: string) => void;
 }
 
 export default function CardSummary({
     summaryData,
     onlyDeletedContent = 0,
-    homePage = false
+    homePage = false,
+    onOpen
 }: CardSummaryProps) {
 
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -194,13 +196,13 @@ export default function CardSummary({
                             style={{ width: isMobile ? '100%' : '125px' }}
                             icon={<RightOutlined />}
                             iconPosition="end"
-                            onClick={openModal}
+                            onClick={() => onOpen ? onOpen(summaryData.id) : openModal()}
                         >
                             Acessar
                         </Button>
                     </Layout>
                 </Flex>
-                {isModalOpen && (
+                {!onOpen && isModalOpen && (
                     <ViewSummary
                         open={isModalOpen}
                         onClose={closeModal}

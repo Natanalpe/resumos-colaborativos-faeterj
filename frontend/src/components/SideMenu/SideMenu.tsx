@@ -43,7 +43,7 @@ export const SideMenu = ({ props, mobileMenuOpen, setMobileMenuOpen }: MenuTypeK
         const items: MenuItem[] = [
             {
                 key: 'home',
-                label: <Link to="/">Home</Link>,
+                label: <Link to="/">Início</Link>,
                 icon: <HomeOutlined />,
                 style: getMenuItemStyle(pageSelected === 'home')
             },

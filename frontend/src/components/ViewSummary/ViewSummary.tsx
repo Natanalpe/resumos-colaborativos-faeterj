@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSummaryById } from "../../service/SummariesService";
 import type { TResponseSummary, TTypesSummary } from "../../types/SummaryTypes";
 import type { NoticeType } from "antd/es/message/interface";
-import { CloudDownloadOutlined, CopyOutlined, DislikeOutlined, DownloadOutlined, HeartOutlined, MoreOutlined, RotateLeftOutlined, RotateRightOutlined, ShareAltOutlined, SmileOutlined, SwapOutlined, ZoomInOutlined, ZoomOutOutlined } from "@ant-design/icons";
+import { CloudDownloadOutlined, CopyOutlined, DislikeOutlined, DownloadOutlined, HeartOutlined, LeftOutlined, MoreOutlined, RightOutlined, RotateLeftOutlined, RotateRightOutlined, ShareAltOutlined, SmileOutlined, SwapOutlined, ZoomInOutlined, ZoomOutOutlined } from "@ant-design/icons";
 import { IFrameYoutubeStyle, PreviewImageActionsStyle, UserInteractionButtonsStyle, YoutubeVideoFrameContainerStyle } from "./Style";
 import Title from "antd/es/typography/Title";
 import "./ReadmeStyle.css";
@@ -27,7 +27,12 @@ interface IViewSummaryProps {
     open: boolean,
     onClose: () => void,
     id: string | undefined,
-    onlyDeletedContent: number
+    onlyDeletedContent: number,
+    onNext?: () => void,
+    onPrevious?: () => void,
+    hasNext?: boolean,
+    hasPrevious?: boolean,
+    isNavigating?: boolean
 }
 
 type TTagTypes = 'p1' | 'p2' | 'p3' | 'pf' | 'outros';
@@ -36,7 +41,12 @@ export const ViewSummary = ({
     open,
     onClose,
     id,
-    onlyDeletedContent = 0
+    onlyDeletedContent = 0,
+    onNext,
+    onPrevious,
+    hasNext = false,
+    hasPrevious = false,
+    isNavigating = false
 }: IViewSummaryProps) => {
 
     const screens = useBreakpoint();
@@ -74,6 +84,22 @@ export const ViewSummary = ({
     useEffect(() => {
         randomColor()
     }, []);
+
+    useEffect(() => {
+        if (!open || isMobile) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (isNavigating) return;
+            if (e.key === 'ArrowRight' && hasNext && onNext) {
+                onNext();
+            } else if (e.key === 'ArrowLeft' && hasPrevious && onPrevious) {
+                onPrevious();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [open, isMobile, isNavigating, hasNext, hasPrevious, onNext, onPrevious]);
 
     const addParam = () => {
         if (id) {
@@ -653,6 +679,40 @@ export const ViewSummary = ({
     return (
         <>
             {contextHolder}
+            {!isMobile && open && hasPrevious && onPrevious && (
+                <Button
+                    shape="circle"
+                    size="large"
+                    icon={<LeftOutlined />}
+                    onClick={onPrevious}
+                    loading={isNavigating}
+                    aria-label="Resumo anterior"
+                    style={{
+                        position: 'fixed',
+                        left: '24px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 1100
+                    }}
+                />
+            )}
+            {!isMobile && open && hasNext && onNext && (
+                <Button
+                    shape="circle"
+                    size="large"
+                    icon={<RightOutlined />}
+                    onClick={onNext}
+                    loading={isNavigating}
+                    aria-label="Próximo resumo"
+                    style={{
+                        position: 'fixed',
+                        right: '24px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 1100
+                    }}
+                />
+            )}
             <Modal
                 loading={isLoading}
                 open={open}
@@ -673,6 +733,29 @@ export const ViewSummary = ({
                     }
                 }}
                 footer={[
+                    ...(isMobile && (onPrevious || onNext)
+                        ? [
+                            <Button
+                                key='previous'
+                                icon={<LeftOutlined />}
+                                onClick={onPrevious}
+                                disabled={!hasPrevious || isNavigating}
+                                loading={isNavigating}
+                            >
+                                Anterior
+                            </Button>,
+                            <Button
+                                key='next'
+                                icon={<RightOutlined />}
+                                iconPosition="end"
+                                onClick={onNext}
+                                disabled={!hasNext || isNavigating}
+                                loading={isNavigating}
+                            >
+                                Próximo
+                            </Button>
+                        ]
+                        : []),
                     <Button key='close' onClick={handleClose}>Fechar</Button>
                 ]}
             >

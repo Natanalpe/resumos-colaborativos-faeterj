@@ -358,9 +358,8 @@ class CollectionController extends Controller
                         $q->where('review', 'confuso');
                     }
                 ])
-                ->whereHas('collectionDocuments', function ($q) use ($collection_id) {
-                    $q->where('colecao_id', $collection_id);
-                });
+                ->join('colecao_documento', 'documentos.id', '=', 'colecao_documento.documento_id')
+                ->where('colecao_documento.colecao_id', $collection_id);
 
             if (!empty($searchQueryTerm)) {
                 $searchQueryTerm = strtolower($searchQueryTerm);
@@ -384,7 +383,7 @@ class CollectionController extends Controller
                 });
             }
 
-            $query->orderBy('documentos.created_at', 'desc');
+            $query->orderBy('colecao_documento.ordem', 'asc');
 
             $summaries = $query->paginate($perPage);
 
@@ -451,9 +450,8 @@ class CollectionController extends Controller
                         $q->where('review', 'confuso');
                     }
                 ])
-                ->whereHas('collectionDocuments', function ($q) use ($user_id) {
-                    $q->where('user_id', $user_id);
-                });
+                ->join('colecao_documento', 'documentos.id', '=', 'colecao_documento.documento_id')
+                ->where('colecao_documento.user_id', $user_id);
 
             if (!empty($searchQueryTerm)) {
                 $searchQueryTerm = strtolower($searchQueryTerm);
@@ -477,7 +475,7 @@ class CollectionController extends Controller
                 });
             }
 
-            $query->orderBy('documentos.created_at', 'desc');
+            $query->orderBy('colecao_documento.ordem', 'asc');
 
             $summaries = $query->paginate($perPage);
 

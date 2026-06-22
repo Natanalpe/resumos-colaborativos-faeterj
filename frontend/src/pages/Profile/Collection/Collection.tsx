@@ -1,7 +1,7 @@
 import { ClearOutlined, CloudDownloadOutlined, CopyOutlined, DragOutlined, EditOutlined, InfoCircleOutlined, LeftOutlined, LoadingOutlined, MoreOutlined, SearchOutlined, ShareAltOutlined } from "@ant-design/icons";
 import { Button, Card, Divider, Dropdown, Flex, Form, Grid, Input, Layout, message, Modal, QRCode, Select, Space, Spin, Tag, Tooltip, Typography, type SelectProps } from "antd";
 import type { NoticeType } from "antd/es/message/interface";
-import { useNavigate, useParams } from "react-router"
+import { useNavigate, useParams, useSearchParams } from "react-router"
 import { clearFieldsButtonStyle, formItemStyle, formRowStyle, formStyle, labelStyle, materiaSelectStyle, searchBarStyle, teacherSelectStyle, UserInteractionButtonsStyle } from "./Style";
 import mainIcon from '../../../assets/icons/logo.svg';
 import Title from "antd/es/typography/Title";
@@ -15,6 +15,7 @@ import type { TSimpleUser, UsersTeacherResponse } from "../../../types/UserType"
 import { useDebounce } from "../../../hooks/UseDebouce";
 import { getSubjects } from "../../../service/SubjectsService";
 import CardSummary from "../../../components/CardSummary/CardSummary";
+import { ViewSummary } from "../../../components/ViewSummary/ViewSummary";
 import { getAllTeachersSimple } from "../../../service/UsersService";
 import { Doodle } from "../../../components/Doodle/Doodle";
 import { editCollectionName, getCollectionById } from "../../../service/CollectionsService";
@@ -31,6 +32,45 @@ interface DraggableCardProps {
     summary: any;
     isDragging: boolean;
     isOwner: boolean;
+    onOpen: (id: string) => void;
+}
+
+function DraggableCard({ summary, isDragging, isOwner, onOpen }: DraggableCardProps) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id: summary.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        position: 'relative' as const,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style}>
+            {isOwner && (
+                <Button
+                    {...attributes}
+                    {...listeners}
+                    icon={<DragOutlined />}
+                    style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        zIndex: 10,
+                        cursor: 'grab',
+                    }}
+                    type="text"
+                />
+            )}
+            <CardSummary summaryData={summary} onOpen={onOpen} />
+        </div>
+    );
 }
 
 export function Collection() {
@@ -45,6 +85,7 @@ export function Collection() {
     const { debounce } = useDebounce();
     const queryClient = useQueryClient();
     const { collection_id, user_id } = useParams();
+    const [searchParams] = useSearchParams();
     const [messageApi, contextHolder] = message.useMessage();
 
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
@@ -62,6 +103,10 @@ export function Collection() {
 
     const [draggedId, setDraggedId] = useState<string | null>(null);
     const [localSummaries, setLocalSummaries] = useState<any[]>([]);
+
+    const [currentViewId, setCurrentViewId] = useState<string | undefined>();
+    const [viewOpen, setViewOpen] = useState<boolean>(false);
+    const [pendingNext, setPendingNext] = useState<boolean>(false);
 
     const isOwner = user?.user_id === user_id;
 
@@ -119,6 +164,14 @@ export function Collection() {
             setDebouncedSearchTerm(searchTerm);
         });
     }, [searchTerm, selectedTeacher, debounce, selectedType, selectedSubject]);
+
+    useEffect(() => {
+        const summaryParam = searchParams.get('summary');
+        if (summaryParam) {
+            setCurrentViewId(summaryParam);
+            setViewOpen(true);
+        }
+    }, []);
 
     useEffect(() => {
         setIsLoading(true);
@@ -334,6 +387,53 @@ export function Collection() {
         return summaryResponse?.pages.flatMap((page: any) => page.data) || [];
     }, [summaryResponse]);
 
+    const isReorderable = Boolean(isOwner && !hasActiveFilters && collection_id);
+
+    const displayedSummaries = isReorderable ? localSummaries : allSummaries;
+
+    const currentIndex = useMemo(
+        () => displayedSummaries.findIndex((s: any) => s.id === currentViewId),
+        [displayedSummaries, currentViewId]
+    );
+
+    const hasPreviousSummary = currentIndex > 0;
+    const hasNextSummary = currentIndex >= 0 && (currentIndex < displayedSummaries.length - 1 || Boolean(hasNextPage));
+
+    const openSummary = (id: string) => {
+        setCurrentViewId(id);
+        setViewOpen(true);
+    };
+
+    const closeSummary = () => {
+        setViewOpen(false);
+        setPendingNext(false);
+    };
+
+    const goToPreviousSummary = () => {
+        if (currentIndex > 0) {
+            setCurrentViewId(displayedSummaries[currentIndex - 1].id);
+        }
+    };
+
+    const goToNextSummary = () => {
+        if (currentIndex < 0) return;
+
+        if (currentIndex < displayedSummaries.length - 1) {
+            setCurrentViewId(displayedSummaries[currentIndex + 1].id);
+        } else if (hasNextPage && !isFetchingNextPage) {
+            setPendingNext(true);
+            fetchNextPage();
+        }
+    };
+
+    useEffect(() => {
+        if (!pendingNext) return;
+        if (currentIndex >= 0 && currentIndex < displayedSummaries.length - 1) {
+            setCurrentViewId(displayedSummaries[currentIndex + 1].id);
+            setPendingNext(false);
+        }
+    }, [pendingNext, displayedSummaries, currentIndex]);
+
     const loadMoreSummaries = () => {
         if (hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
@@ -384,44 +484,6 @@ export function Collection() {
             .finally(() => {
                 setIsSaving(false);
             });
-    }
-
-    function DraggableCard({ summary, isDragging, isOwner }: DraggableCardProps) {
-        const {
-            attributes,
-            listeners,
-            setNodeRef,
-            transform,
-            transition,
-        } = useSortable({ id: summary.id });
-
-        const style = {
-            transform: CSS.Transform.toString(transform),
-            transition,
-            opacity: isDragging ? 0.5 : 1,
-            position: 'relative' as const,
-        };
-
-        return (
-            <div ref={setNodeRef} style={style}>
-                {isOwner && (
-                    <Button
-                        {...attributes}
-                        {...listeners}
-                        icon={<DragOutlined />}
-                        style={{
-                            position: 'absolute',
-                            top: '10px',
-                            right: '10px',
-                            zIndex: 10,
-                            cursor: 'grab',
-                        }}
-                        type="text"
-                    />
-                )}
-                <CardSummary summaryData={summary} />
-            </div>
-        );
     }
 
     return (
@@ -576,6 +638,7 @@ export function Collection() {
                                             summary={summary}
                                             isDragging={draggedId === summary.id}
                                             isOwner={isOwner}
+                                            onOpen={openSummary}
                                         />
                                     ))}
                                 </SortableContext>
@@ -584,7 +647,7 @@ export function Collection() {
                             <>
                                 {allSummaries.map((summary: any) => (
                                     <div key={summary.id}>
-                                        <CardSummary summaryData={summary} />
+                                        <CardSummary summaryData={summary} onOpen={openSummary} />
                                     </div>
                                 ))}
                             </>
@@ -672,6 +735,20 @@ export function Collection() {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            {viewOpen && (
+                <ViewSummary
+                    open={viewOpen}
+                    onClose={closeSummary}
+                    id={currentViewId}
+                    onlyDeletedContent={0}
+                    onNext={goToNextSummary}
+                    onPrevious={goToPreviousSummary}
+                    hasNext={hasNextSummary}
+                    hasPrevious={hasPreviousSummary}
+                    isNavigating={pendingNext && isFetchingNextPage}
+                />
+            )}
         </>
     );
 }
